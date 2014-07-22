@@ -384,7 +384,7 @@ public class PerlDebugThread extends DebugElement implements IThread
         }
     }
     
-    private void suspended(int kind)
+    public void suspended(int kind)
     {
         try
         {            
