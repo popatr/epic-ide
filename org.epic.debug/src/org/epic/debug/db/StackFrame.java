@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.*;
 import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.*;
+import org.epic.debug.HelperScript;
 import org.epic.debug.PerlDebugPlugin;
 import org.epic.debug.ui.action.*;
 

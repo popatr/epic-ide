@@ -1,8 +1,10 @@
 package org.epic.debug.db;
 
+import java.io.IOException;
 import java.util.*;
 
 import org.eclipse.core.runtime.Status;
+import org.eclipse.debug.core.DebugEvent;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.*;
 import org.epic.debug.PerlDebugPlugin;
@@ -205,7 +207,19 @@ public abstract class PerlVariable extends DebugElement implements IVariable
      */
     public void setValue(String expression) throws DebugException
     {
-        throwNotSupported();
+    	String e2=expression;
+    	if(e2.contains("\n")){
+    		e2="\""+expression.replaceAll("\r?\n", "\\\\n")+"\"";
+    	}
+    	String setString=this.getExpression() + "=" + e2;
+    	setString=setString.replaceAll("([@$%\\\\\"])", "\\\\$1");
+    	
+        try {
+			this.frame.getPerlThread().getDB().eval(String.format("dumpvar_epic::set_variable(%d, \"%s\")", this.frame.getFrameIndex(), setString));
+			this.frame.getPerlThread().suspended(0);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 
     /**
@@ -225,7 +239,7 @@ public abstract class PerlVariable extends DebugElement implements IVariable
      */
     public boolean supportsValueModification()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -233,8 +247,7 @@ public abstract class PerlVariable extends DebugElement implements IVariable
      */
     public boolean verifyValue(String expression) throws DebugException
     {
-        throwNotSupported();
-        return false;
+        return true;
     }
 
     /**

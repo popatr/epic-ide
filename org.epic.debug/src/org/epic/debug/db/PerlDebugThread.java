@@ -274,6 +274,10 @@ public class PerlDebugThread extends DebugElement implements IThread
         }
     }
     
+    public DebugTarget getDebugTarget(){
+    	return (DebugTarget)super.getDebugTarget();
+    }
+    
     /**
      * Invoked by DebugCommand on PerlDebugJob's thread to indicate
      * that the command has finished - either because the debugger
@@ -306,7 +310,7 @@ public class PerlDebugThread extends DebugElement implements IThread
     
     IPath getDebuggerPath(IPath epicPath)
     {
-        return ((DebugTarget) getDebugTarget()).getPathMapper()
+        return getDebugTarget().getPathMapper()
             .getDebuggerPath(epicPath, db);
     }
     
@@ -318,7 +322,7 @@ public class PerlDebugThread extends DebugElement implements IThread
             catch (CoreException e) { PerlDebugPlugin.log(e); }
         }
         
-        return ((DebugTarget) getDebugTarget()).getPathMapper()
+        return getDebugTarget().getPathMapper()
             .getEpicPath(dbPath);
     }
     

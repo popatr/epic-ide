@@ -57,6 +57,7 @@ import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.epic.debug.*;
 import org.epic.debug.util.RemotePort;
+import org.eclipse.swt.events.SelectionAdapter;
 
 public class LaunchConfigurationRemoteMainTab
 		extends
@@ -94,6 +95,7 @@ public class LaunchConfigurationRemoteMainTab
 	private static final String PERL_NATURE_ID = "org.epic.perleditor.perlnature";
 	private Label fDestLabel;
 	private Text fDestText;
+	private Button fmd5CheckBox;
 	private GridLayout layout;
 	private FileFieldEditor mDebugPackageFilePath;
 	private Object checkComp;
@@ -103,11 +105,13 @@ public class LaunchConfigurationRemoteMainTab
     private Button fCaptureOutCheckBox;
 	Composite mDebugPackageComp;
 	
-	private ProjectAndFileBlock fProjectAndFileBlock  = new ProjectAndFileBlock();;
+	private ProjectAndFileBlock fProjectAndFileBlock  = new ProjectAndFileBlock();
+	private Composite md5Comp;;
 
 	
 	/**
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#createControl(Composite)
+	 * @wbp.parser.entryPoint
 	 */
 	public void createControl(Composite parent) {
 		Font font = parent.getFont();
@@ -247,6 +251,31 @@ public class LaunchConfigurationRemoteMainTab
 		});
 
 		createVerticalSpacer(comp, 1);
+		
+		md5Comp = new Composite(comp, SWT.NONE);
+		GridLayout md5Layout = new GridLayout();
+		md5Layout.numColumns = 3;
+		md5Layout.marginHeight = 0;
+		md5Layout.marginWidth = 0;
+		md5Layout.makeColumnsEqualWidth = true;
+		md5Comp.setLayout(md5Layout);
+		gd = new GridData(GridData.FILL_HORIZONTAL);
+		md5Comp.setLayoutData(gd);
+		
+		Label fmd5Label = new Label(md5Comp, SWT.NONE);
+		fmd5Label.setText("Breakpoints match code, not path");
+		
+		fmd5CheckBox = new Button(md5Comp, SWT.CHECK);
+		fmd5CheckBox.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				calculateDestTextEnabled();
+				updateLaunchConfigurationDialog();
+			}
+		});
+		
+		createVerticalSpacer(comp, 1);
+		
 		Composite portComp = new Composite(comp, SWT.NONE);
 		GridLayout portLayout = new GridLayout();
 		portLayout.numColumns = 3;
@@ -301,6 +330,7 @@ public class LaunchConfigurationRemoteMainTab
         gd.horizontalSpan = 1;
         fCaptureOutCheckBox.setLayoutData(gd);
         fCaptureOutCheckBox.setFont(font);
+        new Label(captureComp, SWT.NONE);
         
 		//********************************
 		createVerticalSpacer(comp, 1);
@@ -310,7 +340,7 @@ public class LaunchConfigurationRemoteMainTab
 		checkLayout.marginHeight = 0;
 		checkLayout.marginWidth = 0;
 		checkLayout.makeColumnsEqualWidth = true;
-		checkComp.setLayout(portLayout);
+		checkComp.setLayout(checkLayout);
 		gd = new GridData(GridData.FILL_HORIZONTAL);
 		checkComp.setLayoutData(gd);
 		checkComp.setFont(font);
@@ -328,6 +358,7 @@ public class LaunchConfigurationRemoteMainTab
 		gd.horizontalSpan = 1;
 		fCreatePkgCheckBox.setLayoutData(gd);
 		fCreatePkgCheckBox.setFont(font);
+		new Label(checkComp, SWT.NONE);
 
 		fCreatePkgCheckBox.addSelectionListener(new SelectionListener() {
 
@@ -371,6 +402,11 @@ public class LaunchConfigurationRemoteMainTab
 		mDebugPackageFilePath.setEnabled(fCreatePkgCheckBox.getSelection(),
 				mDebugPackageComp);
 	}
+	
+	void calculateDestTextEnabled() {
+		fDestLabel.setEnabled(!fmd5CheckBox.getSelection());
+		fDestText.setEnabled(!fmd5CheckBox.getSelection());
+	}
 	/**
 	 * @see org.eclipse.debug.ui.ILaunchConfigurationTab#initializeFrom(ILaunchConfiguration)
 	 */
@@ -409,7 +445,19 @@ public class LaunchConfigurationRemoteMainTab
 			PerlDebugPlugin.log(ce);
 		}
 		fDestText.setText(val);
+		
+		boolean bval = false;
+		try {
+			bval = config.getAttribute(
+					PerlLaunchConfigurationConstants.ATTR_MD5_BREAKS,
+					false);
+		} catch (CoreException ce) {
+			PerlDebugPlugin.log(ce);
+		}
+		fmd5CheckBox.setSelection(bval);
+		
 		calculatePackageFilePathEnabled();
+		calculateDestTextEnabled();
 	}
 
 //	protected void updateProjectFromConfig(ILaunchConfiguration config) {
@@ -490,6 +538,9 @@ public class LaunchConfigurationRemoteMainTab
             PerlLaunchConfigurationConstants.ATTR_REMOTE_DEBUG_PACKAGE_PATH,
 			(String) mDebugPackageFilePath.getStringValue());
 		config.setAttribute(
+	            PerlLaunchConfigurationConstants.ATTR_MD5_BREAKS,
+				(boolean) fmd5CheckBox.getSelection());
+		config.setAttribute(
 			PerlLaunchConfigurationConstants.ATTR_REMOTE_CREATE_DEBUG_PACKAGE,
 			(boolean) fCreatePkgCheckBox.getSelection());
         config.setAttribute(
@@ -534,7 +585,7 @@ public class LaunchConfigurationRemoteMainTab
 			return false;
 		}
 		name = fDestText.getText().trim();
-		if (name.length() == 0) {
+		if (name.length() == 0 && !fmd5CheckBox.getSelection()) {
 			setErrorMessage("Target Host Project Installation Path is not specified"); //$NON-NLS-1$
 			return false;
 		}
@@ -583,6 +634,10 @@ public class LaunchConfigurationRemoteMainTab
 				host);
 		config.setAttribute(PerlLaunchConfigurationConstants.ATTR_REMOTE_PORT,
 				Integer.toString(RemotePort.findFreePort()));
+		config
+		.setAttribute(
+				PerlLaunchConfigurationConstants.ATTR_MD5_BREAKS,
+				false);
 		config
 				.setAttribute(
 						PerlLaunchConfigurationConstants.ATTR_REMOTE_CREATE_DEBUG_PACKAGE,

@@ -6,6 +6,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugException;
 import org.eclipse.debug.core.model.IDebugTarget;
+import org.epic.debug.HelperScript;
 import org.epic.debug.PerlDebugPlugin;
 
 /**
