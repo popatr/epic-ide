@@ -257,8 +257,11 @@ public class PerlDebugThread extends DebugElement implements IThread
                 ));
     }
 
+    private boolean terminating=false;
     public void terminate() throws DebugException
     {
+    	if(terminating) return;
+    	terminating=true;
         synchronized (LOCK)
         {
             if (isSuspended())
